@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
 ]
 
 MIDDLEWARE = [
@@ -119,13 +118,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
+#BASE_DIR = C:\Users\jaymr\Desktop\JavaSeminar\BE_Year\ROSPL_Project\MRS\src
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-    '/var/www/static/',
+    os.path.join(BASE_DIR, 'static')
 ]
+
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'web/static/web')
+# MEDIA_URL = '/images/'
+ 
+ #To Add Primary Key attrib to the movies and ratings class in admin 
+DEFAULT_AUTO_FIELD='django.db.models.AutoField' 

@@ -12,17 +12,24 @@
         <div class="col-sm-2 col-md-3">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <a href="#">                            
-                        <img src="{{ movies.movie_logo.url}}" class="img-responsive">
+                    <a href="{{ movies.movie_logo.url }}">                            
+                        <img src="{{ movies.movie_logo.url }}" class="img-responsive">
                     </a>
                     <h2></h2>
                 </div>
             </div>
         </div>
         <!-- Right Movie Info -->
-        <div class="col-sm-offset-1 col-sm-4 col-md-4">
+        <div class="col-sm-offset-1 col-sm-6 col-md-6">
             <h1>{{movies.title}}</h1>
-            <h3><small>{{movies.genre}}</small></h3>
+            <h3>Genre : {{movies.genre}}</h3>
+            <h3>IMDB_Ratings : {{movies.imdb_ratings}}</h3>
+            <h3>Released_Year : {{movies.released_year}} </h3>
+            <h3>Certificate : {{movies.certificate}} </h3>
+            <h3>Runtime : {{movies.runtime}}</h3>
+            <h3>Released_Year : {{movies.released_year}}</h3>
+            <h3>Score : {{movies.score}}</h3>
+            <h3>Overview : {{movies.overview}} </h3>
         	<h1><small>Have you watch ?</small></h1>
             <h3><small>Please rate to get recommendation </small></h3>
             {% if messages %}

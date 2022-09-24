@@ -20,10 +20,11 @@ def recommend(request):
 		raise Http404
 	df=pd.DataFrame(list(Myrating.objects.all().values()))
 	nu=df.user_id.unique().shape[0]
+	print(nu)
 	current_user_id= request.user.id
 	# if new user not rated any movie
 	if current_user_id>nu:
-		movie=Movie.objects.get(id=15)
+		movie=Movie.objects.get(id=20)
 		q=Myrating(user=request.user,movie=movie,rating=0)
 		q.save()
 
@@ -33,7 +34,7 @@ def recommend(request):
 	pred_idxs_sorted = np.argsort(my_predictions)
 	pred_idxs_sorted[:] = pred_idxs_sorted[::-1]
 	pred_idxs_sorted=pred_idxs_sorted+1
-	print(pred_idxs_sorted)
+	# print(pred_idxs_sorted)
 	preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pred_idxs_sorted)])
 	movie_list=list(Movie.objects.filter(id__in = pred_idxs_sorted,).order_by(preserved)[:10])
 	return render(request,'web/recommend.html',{'movie_list':movie_list})

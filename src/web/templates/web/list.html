@@ -41,19 +41,22 @@
     <div class="row">
             {% if movies %}
             {% for movie in movies %}
-                <div class="col-sm-2 col-md-2 ">
+                <div class="col-sm-4 col-md-4 ">
                     <div class="thumbnail">
                         <h4>{{movie.title}}</h4>
                         <a href="{% url 'detail' movie.id %}">
-                            <img src="{{ movie.movie_logo.url}}" class="img-responsive">
+                            <img src="{{movie.movie_logo.url}}" alt="{{movie.movie_logo.url}}" class="img-responsive">
                         </a>
-                        <h5>{{movie.genre}}</h5>
+                        <h5>Genre : {{movie.genre}}</h5>
+                        <h5>IMDB_Ratings : {{movie.imdb_ratings}}</h5>
+                        <h5>Released_Year : {{movie.released_year}} </h5>
+                        <h5>Certificate : {{movie.certificate}} </h5>
+                        <h5>Runtime : {{movie.runtime}}</h5>
                         <div class="caption">
 
                             <!-- View Details -->
                             <a href="{% url 'detail' movie.id %}" class="btn btn-primary btn-sm" role="button">Give Rating</a>
 
-                                        
                         </div>
                     </div>
                 </div>
