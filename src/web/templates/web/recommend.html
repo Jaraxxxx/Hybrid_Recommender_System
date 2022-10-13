@@ -16,8 +16,8 @@
                 <div class="col-sm-2 col-md-2 ">
                     <div class="thumbnail">
                         <h4>{{movie.title}}</h4>
-                        <a href="{% url 'detail' movie.id %}">
-                            <img src="{{ movie.movie_logo.url}}" class="img-responsive">
+                        <a href="{% url 'detail' movie.movie_id %}">
+                            <img src="{{movie.movie_logo.url}}" class="img-responsive">
                         </a>
                         <h5>Genre: {{movie.genre}}</h5>
                         <h5>IMDB_Ratings : {{movie.imdb_ratings}}</h5>
@@ -28,7 +28,7 @@
                         <div class="caption">
 
                             <!-- View Details -->
-                            <a href="{% url 'detail' movie.id %}" class="btn btn-primary btn-sm" role="button">Give Rating</a>
+                            <a href="{% url 'detail' movie.movie_id %}" class="btn btn-primary btn-sm" role="button">Give Rating</a>
 
                                         
                         </div>

@@ -5,7 +5,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 
 class Movie(models.Model):
-	id = models.CharField(primary_key=True,max_length=4, validators=[RegexValidator(r'^\d{1,10}$')],default="0.0")
+	movie_id = models.CharField(primary_key=True,max_length=4, validators=[RegexValidator(r'^\d{1,10}$')],default="0.0")
 	movie_logo  = models.FileField(max_length=500,default="NA") 
 	title   	= models.CharField(max_length=200,default="NA")
 	released_year = models.CharField(max_length=4, validators=[RegexValidator(r'^\d{1,10}$')],default="NA")
