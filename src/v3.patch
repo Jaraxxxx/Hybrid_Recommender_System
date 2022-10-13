@@ -1,0 +1,485 @@
+diff --git a/src/db.sqlite3 b/src/db.sqlite3
+index fe82c32..6cb1917 100644
+Binary files a/src/db.sqlite3 and b/src/db.sqlite3 differ
+diff --git a/src/db_og.sqlite3 b/src/db_og.sqlite3
+index b4aeea4..79669ad 100644
+Binary files a/src/db_og.sqlite3 and b/src/db_og.sqlite3 differ
+diff --git a/src/main/__pycache__/settings.cpython-310.pyc b/src/main/__pycache__/settings.cpython-310.pyc
+index 353a241..f858a42 100644
+Binary files a/src/main/__pycache__/settings.cpython-310.pyc and b/src/main/__pycache__/settings.cpython-310.pyc differ
+diff --git a/src/main/settings.py b/src/main/settings.py
+index 03bff8f..2c68b72 100644
+--- a/src/main/settings.py
++++ b/src/main/settings.py
+@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'main.wsgi.application'
+ DATABASES = {
+     'default': {
+         'ENGINE': 'django.db.backends.sqlite3',
+-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
++        'NAME': os.path.join(BASE_DIR, 'db_og.sqlite3'),
+     }
+ }
+ 
+diff --git a/src/media/Inglourious_Basterds.jpg b/src/media/Inglourious_Basterds.jpg
+index 1b819f4..b8bcaf3 100644
+Binary files a/src/media/Inglourious_Basterds.jpg and b/src/media/Inglourious_Basterds.jpg differ
+diff --git a/src/media/The_Lion_King.jpg b/src/media/The_Lion_King.jpg
+index ddca64b..0ee4be6 100644
+Binary files a/src/media/The_Lion_King.jpg and b/src/media/The_Lion_King.jpg differ
+diff --git "a/src/media/WALL\302\267E.jpg" "b/src/media/WALL\302\267E.jpg"
+index df2f83e..b3dc39f 100644
+Binary files "a/src/media/WALL\302\267E.jpg" and "b/src/media/WALL\302\267E.jpg" differ
+diff --git a/src/web/__pycache__/models.cpython-310.pyc b/src/web/__pycache__/models.cpython-310.pyc
+index 1625a83..1630dbc 100644
+Binary files a/src/web/__pycache__/models.cpython-310.pyc and b/src/web/__pycache__/models.cpython-310.pyc differ
+diff --git a/src/web/__pycache__/recommendation.cpython-310.pyc b/src/web/__pycache__/recommendation.cpython-310.pyc
+index 0544a40..cb10b61 100644
+Binary files a/src/web/__pycache__/recommendation.cpython-310.pyc and b/src/web/__pycache__/recommendation.cpython-310.pyc differ
+diff --git a/src/web/__pycache__/urls.cpython-310.pyc b/src/web/__pycache__/urls.cpython-310.pyc
+index 498b75d..beb34d3 100644
+Binary files a/src/web/__pycache__/urls.cpython-310.pyc and b/src/web/__pycache__/urls.cpython-310.pyc differ
+diff --git a/src/web/__pycache__/views.cpython-310.pyc b/src/web/__pycache__/views.cpython-310.pyc
+index 16f5a3f..2dcf1c4 100644
+Binary files a/src/web/__pycache__/views.cpython-310.pyc and b/src/web/__pycache__/views.cpython-310.pyc differ
+diff --git a/src/web/models.py b/src/web/models.py
+index 19865ca..8a1fc82 100644
+--- a/src/web/models.py
++++ b/src/web/models.py
+@@ -5,13 +5,13 @@ from django.db import models
+ from django.core.validators import RegexValidator
+ 
+ class Movie(models.Model):
+-	id = models.CharField(primary_key=True,max_length=4, validators=[RegexValidator(r'^\d{1,10}$')],default="0.0")
+-	movie_logo  = models.FileField(max_length=500,default="NA") 
++	movie_id = models.CharField(primary_key=True,max_length=4, validators=[RegexValidator(r'^\d{1,10}$')],default="0.0")
++	genre = models.CharField(max_length=100,default="NA")
+ 	title   	= models.CharField(max_length=200,default="NA")
++	movie_logo  = models.FileField(max_length=500,default="NA") 
+ 	released_year = models.CharField(max_length=4, validators=[RegexValidator(r'^\d{1,10}$')],default="NA")
+ 	certificate = models.CharField(max_length=10,default="NA")
+ 	runtime = models.CharField(max_length=4, validators=[RegexValidator(r'^\d{1,10}$')],default="0")
+-	genre = models.CharField(max_length=100,default="NA")
+ 	imdb_ratings = models.FloatField(max_length=3,default="0.0")
+ 	overview = models.CharField(max_length=5000,default="NA")
+ 	score = models.CharField(max_length=4, validators=[RegexValidator(r'^\d{1,10}$')],default="0.0")
+@@ -25,5 +25,4 @@ class Movie(models.Model):
+ class Myrating(models.Model):
+ 	user   	= models.ForeignKey(User,on_delete=models.CASCADE) 
+ 	movie 	= models.ForeignKey(Movie,on_delete=models.CASCADE)
+-	rating 	= models.IntegerField(default=0,validators=[MaxValueValidator(5),MinValueValidator(0)])
+-		
+\ No newline at end of file
++	rating 	= models.IntegerField(default=0,validators=[MaxValueValidator(5),MinValueValidator(0)])		
+\ No newline at end of file
+diff --git a/src/web/recommendation.py b/src/web/recommendation.py
+index edbfebd..a10a169 100644
+--- a/src/web/recommendation.py
++++ b/src/web/recommendation.py
+@@ -1,95 +1,46 @@
++from django.contrib.auth import authenticate, login
++from django.contrib.auth import logout
++from django.shortcuts import render,get_object_or_404,redirect
++from django.db.models import Q
++from django.http import Http404
++from .models import Movie,Myrating
++from django.contrib import messages
++from .forms import UserForm
++from django.db.models import Case, When
+ import numpy as np 
+ import pandas as pd
+-from web.models import Myrating
+-import scipy.optimize 
+-
+-
+-def Myrecommend():
+-	def normalizeRatings(myY, myR):
+-    	# The mean is only counting movies that were rated
+-		# print(np.sum(myY,axis=1)) #MovieId sum from Y Matrix
+-		# print(np.sum(myR,axis=1)) #1 sum from R Matrix
+-		# print(np.sum(myY,axis=1)/np.sum(myR,axis=1))
+-		print(np.sum(myY,axis=1))
+-		print(np.average(myR,axis=1))
+-		Ymean = np.sum(myY,axis=1)/np.average(myR,axis=1)
+-		Ymean = Ymean.reshape((Ymean.shape[0],1)) # 1d array reshaping I guess
+-		print(myY-Ymean)
+-		return myY-Ymean, Ymean
+-	
+-	def flattenParams(myX, myTheta):
+-		return np.concatenate((myX.flatten(),myTheta.flatten()))
+-    
+-	def reshapeParams(flattened_XandTheta, mynm, mynu, mynf):
+-		assert flattened_XandTheta.shape[0] == int(mynm*mynf+mynu*mynf)
+-		reX = flattened_XandTheta[:int(mynm*mynf)].reshape((mynm,mynf))
+-		reTheta = flattened_XandTheta[int(mynm*mynf):].reshape((mynu,mynf))
+-		return reX, reTheta
+-
+-	def cofiCostFunc(myparams, myY, myR, mynu, mynm, mynf, mylambda = 0.):
+-		myX, myTheta = reshapeParams(myparams, mynm, mynu, mynf)
+-		term1 = myX.dot(myTheta.T)
+-		term1 = np.multiply(term1,myR)
+-		cost = 0.5 * np.sum( np.square(term1-myY) )
+-    	# for regularization
+-		cost += (mylambda/2.) * np.sum(np.square(myTheta))
+-		cost += (mylambda/2.) * np.sum(np.square(myX))
+-		return cost
+-
+-	def cofiGrad(myparams, myY, myR, mynu, mynm, mynf, mylambda = 0.):
+-		myX, myTheta = reshapeParams(myparams, mynm, mynu, mynf)
+-		term1 = myX.dot(myTheta.T)
+-		term1 = np.multiply(term1,myR)
+-		term1 -= myY
+-		Xgrad = term1.dot(myTheta)
+-		Thetagrad = term1.T.dot(myX)
+-    	# Adding Regularization
+-		Xgrad += mylambda * myX
+-		Thetagrad += mylambda * myTheta
+-		return flattenParams(Xgrad, Thetagrad)
+-
+-	df=pd.DataFrame(list(Myrating.objects.all().values()))
+-	print(df)
+-	mynu=df.user_id.unique().shape[0]
+-	mynm=df.movie_id.unique().shape[0]
+-	mynf=10
+-	Y=np.zeros((mynm,mynu))
+-	# print(Y)
+-	for row in df.itertuples():
+-		# print(row[2],end = ' ') ##UserId
+-		# print(row[3],end = ' ') ##MovieID
+-		# print(row[4],end = ' ') ##Ratings
+-		# print(Y[row[2]-1,row[4]-1])
+-		Y[row[2]-1, row[4]-1] = row[3]   
+-		### UId,MId,Ratings(Y Matrix) => UId,1,Ratings (R Matrix) (No Significance of Letters L & R)
+-		# 	 R1  R2				R1  R2
+-		# U1 M1  0		==>  U1  1   0
+-		# U2 0   M2			 U2  0   1
+-		### 
+-	R=np.zeros((mynm,mynu))
+-	print(Y.shape[0])
+-	print(Y.shape[1])
+-	for i in range(Y.shape[0]):
+-		for j in range(Y.shape[1]):
+-			# print(Y[i][j], end =" ")
+-			if Y[i][j]!=0:
+-				R[i][j]=1
+-	print()
+-
+-	Ynorm, Ymean = normalizeRatings(Y,R)
+-	X = np.random.rand(mynm,mynf)
+-	Theta = np.random.rand(mynu,mynf)
+-	myflat = flattenParams(X, Theta)
+-	mylambda = 12.2
+-	result = scipy.optimize.fmin_cg(cofiCostFunc,x0=myflat,fprime=cofiGrad,args=(Y,R,mynu,mynm,mynf,mylambda),maxiter=40,disp=True,full_output=True)
+-	resX, resTheta = reshapeParams(result[0], mynm, mynu, mynf)
+-	prediction_matrix = resX.dot(resTheta.T)
+-	return prediction_matrix,Ymean
+-	
+-
+-
+-
++from urllib import request 
++import matplotlib as plt
++import seaborn as sns
+ 
+ 
+ 
+ 
++def Myrecommend():
++    print("Working on Recommendation")
++    # Importing Myrating Data  
++    ratings_df = pd.DataFrame(list(Myrating.objects.all().values()))
++    # Importing Movie Data 
++    movie_df = pd.DataFrame(list(Movie.objects.all().values()))
++    # Merging Data (Ratings_df & Movie_df)
++    df = ratings_df.merge(movie_df, how="right", on="movie_id")
++    # Creating a Matrix of user_id * title and inserting ratings as corresponding values
++    user_movie_df = df.pivot_table(index=["user_id"], columns=["title"], values="rating")
++    # # Calculate all the components based on the above formula
++    # v=movie_df['imdb_ratings'] #11800, 4500, 4466, etc.
++    # R=movie_df['imdb_ratings'].average()  # 7.2, 6.9, 6.3, 7.6, etc.
++    # C=movie_df['imdb_ratings'].average().mean() # 6.092171559442011
++    # m=movie_df['imdb_ratings'].quantile(0.70) # 581.0
++    # movie_df['weighted_average']=((R*v)+ (C*m))/(v+m)
++    # movie_sorted_ranking=movie_df.sort_values('weighted_average',ascending=False)
++    # #Visualization Part of Weighted Average
++    # weight_average = movie_df.sort_values('weighted_average',ascending=False)
++    # plt.figure(figsize=(12,6))
++    # axis1=sns.barplot(x=weight_average['weighted_average'].head(10), y=weight_average["Movie_title"].head(10), data=weight_average)
++    # plt.xlim(4, 10)
++    # plt.title('Best Movies by average votes', weight='bold')
++    # plt.xlabel('Weighted Average Score', weight='bold')
++    # plt.ylabel('Movie Title', weight='bold')
++    # plt.savefig('best_movies.png')
++    return user_movie_df
++    
+\ No newline at end of file
+diff --git a/src/web/templates/web/detail.html b/src/web/templates/web/detail.html
+index f5c2c74..c151754 100644
+--- a/src/web/templates/web/detail.html
++++ b/src/web/templates/web/detail.html
+@@ -40,7 +40,7 @@
+             </ul>
+             {% endif %}
+         <div class="col-sm-offset-0 col-sm-8">
+-            <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movies.id %}" onsubmit="return validateForm()"  name="ratingForm">
++            <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movies.movie_id %}" onsubmit="return validateForm()"  name="ratingForm">
+             <div class="form-group">
+             <div class="input-group"> 
+              <div class="row">
+@@ -71,4 +71,5 @@
+     </div>
+ </div>
+ 
+-{% endblock %}
+\ No newline at end of file
++{% endblock %}
++
+diff --git a/src/web/templates/web/list.html b/src/web/templates/web/list.html
+index 4e83e8f..1309128 100644
+--- a/src/web/templates/web/list.html
++++ b/src/web/templates/web/list.html
+@@ -31,7 +31,7 @@
+ 		<h1>Movies List</h1>
+         </div>
+         <div class="col-xs-offset-9  mt-3">
+-        <a href="{% url 'recommend' %}" class="btn"><strong><h2>Get Recommendation</h2></strong></a>
++            <a href="{% url 'recommend' %}" class="btn"><strong><h2>Get Recommendation</h2></strong></a>
+         </div>
+     </div>
+ 	</div>
+@@ -44,7 +44,7 @@
+                 <div class="col-sm-4 col-md-4 ">
+                     <div class="thumbnail">
+                         <h4>{{movie.title}}</h4>
+-                        <a href="{% url 'detail' movie.id %}">
++                        <a href="{% url 'detail' movie.movie_id %}">
+                             <img src="{{movie.movie_logo.url}}" alt="{{movie.movie_logo.url}}" class="img-responsive">
+                         </a>
+                         <h5>Genre : {{movie.genre}}</h5>
+@@ -55,7 +55,7 @@
+                         <div class="caption">
+ 
+                             <!-- View Details -->
+-                            <a href="{% url 'detail' movie.id %}" class="btn btn-primary btn-sm" role="button">Give Rating</a>
++                            <a href="{% url 'detail' movie.movie_id %}" class="btn btn-primary btn-sm" role="button">Give Rating</a>
+ 
+                         </div>
+                     </div>
+diff --git a/src/web/templates/web/recommend.html b/src/web/templates/web/recommend.html
+index ce73ea4..e9b73d3 100644
+--- a/src/web/templates/web/recommend.html
++++ b/src/web/templates/web/recommend.html
+@@ -16,7 +16,7 @@
+                 <div class="col-sm-2 col-md-2 ">
+                     <div class="thumbnail">
+                         <h4>{{movie.title}}</h4>
+-                        <a href="{% url 'detail' movie.id %}">
++                        <a href="{% url 'detail' movie.movie_id %}">
+                             <img src="{{ movie.movie_logo.url}}" class="img-responsive">
+                         </a>
+                         <h5>Genre: {{movie.genre}}</h5>
+@@ -28,7 +28,7 @@
+                         <div class="caption">
+ 
+                             <!-- View Details -->
+-                            <a href="{% url 'detail' movie.id %}" class="btn btn-primary btn-sm" role="button">Give Rating</a>
++                            <a href="{% url 'detail' movie.movie_id %}" class="btn btn-primary btn-sm" role="button">Give Rating</a>
+ 
+                                         
+                         </div>
+diff --git a/src/web/views.py b/src/web/views.py
+index 86a460d..b599be0 100644
+--- a/src/web/views.py
++++ b/src/web/views.py
+@@ -7,24 +7,167 @@ from .models import Movie,Myrating
+ from django.contrib import messages
+ from .forms import UserForm
+ from django.db.models import Case, When
+-from .recommendation import Myrecommend
++# from .recommendation import Myrecommend
++from .old_recommendation import Myrecommend
+ import numpy as np 
+ import pandas as pd
++import random
+ 
++## Version 3
++# def recommend(request):
++# 	if not request.user.is_authenticated:
++# 		return redirect("login")
++# 	if not request.user.is_active:
++# 		raise Http404
++# 	ratings_df = pd.DataFrame(list(Myrating.objects.all().values()))
++# 	movie_df = pd.DataFrame(list(Movie.objects.all().values()))
++# 	nu=ratings_df.user_id.unique().shape[0]
++# 	print("Number of Unique users : ",nu)
++# 	current_user_id= request.user.id
++# 	# if new user not rated any movie
++# 	if current_user_id==nu:
++# 		movie=Movie.objects.get(movie_id=random.randint(0, 1000))
++# 		q=Myrating(user=request.user,movie=movie,rating=0)
++# 		q.save()
+ 
+-# for recommendation
++# 	print("Current user id: ",current_user_id)
++# 	movie_df.certificate.fillna('',inplace = True)
++# 	movie_df.score.fillna(0,inplace = True)
++
++
++# 	# First let's make a copy of the movies_df.
++# 	movies_with_genres = movie_df.copy(deep=True)
++# 	movies_with_genres = movies_with_genres.drop(['movie_logo','released_year','certificate','runtime','imdb_ratings','overview','score','director','stars','no_of_votes'],1)
++# 	movies_with_genres_list = movies_with_genres.genre.str.get_dummies(sep = ", ")
++# 	# Let's iterate through movies_df, then append the movie genres as columns of 1s or 0s.
++# 	# 1 if that column contains movies in the genre at the present index and 0 if not.
++# 	movies_with_genres_list = movies_with_genres_list.multiply(1.0)
++# 	movies_with_genres = pd.concat([movies_with_genres,movies_with_genres_list],axis=1)
++
++
++# 	ratings_df.isna().sum()
++
++
++# 	random_user = 14
++
++# 	random_user_df = ratings_df[ratings_df['user_id'] == random_user]
++# 	random_user_movie_df = random_user_df.merge(movie_df,how="left",on="movie_id")
++
++
++# 	random_user_movie_df_ratings = random_user_movie_df.drop(['id','user_id','genre','imdb_ratings','score','director','stars','no_of_votes','movie_logo','released_year','certificate','runtime','overview'],1)
++
++
++# 	# filter the selection by outputing movies that exist in both Lawrence_movie_ratings and movies_with_genres.
++# 	random_user_movie_df_genres = movies_with_genres[movies_with_genres.movie_id.isin(random_user_movie_df_ratings.movie_id)]
++
++
++# 	random_user_movie_df_genres.reset_index(drop = True,inplace = True)
++# 	random_user_movie_df_genres.drop(['movie_id','title','genre'],axis=1,inplace=True)
++
++# 	random_user_profile = random_user_movie_df_genres.T.dot(random_user_movie_df_ratings.rating)
++
++# 	# let's set the index to the movieId.
++# 	movies_with_genres = movies_with_genres.set_index(movies_with_genres.movie_id)
++
++# 	# Deleting four unnecessary columns.
++# 	movies_with_genres.drop(['movie_id','title','genre'], axis=1, inplace=True)
++
++# 	random_user_recommendation_table = (movies_with_genres.dot(random_user_profile))/random_user_profile.sum() 
++
++# 	random_user_recommendation_table.sort_values(ascending = False,inplace = True)
++
++# 	top_18_index = random_user_recommendation_table.index[:18].tolist()
++
++# 	recommended_movies = movie_df.loc[top_18_index, : ]
++# 	recommended_movies = recommended_movies.reset_index()
++
++
++# 	# print(movie['genre'])
++# 	# print(movies_with_genres)
++# 	# print(rating)
++# 	# print(user_movie_df)
++# 	# print(user_movie_df_genres)
++# 	# print(user_movie_df_genres
++# 	# print(random_user_movie_df_ratings.shape)
++# 	# print(random_user_movie_df_genres.shape)
++# 	# print(random_user_profile)
++# 	# print(movies_with_genres)
++# 	# print(random_user_recommendation_table)
++# 	# print(recommendation_list)
++# 	print(recommended_movies[['title','genre']])
++# 	movie_list = recommended_movies
++# 	return render(request,'web/recommend.html',{'movie_list':movie_list})
++
++
++# # for recommendation Version 2
++# def recommend(request):
++# 	if not request.user.is_authenticated:
++# 		return redirect("login")
++# 	if not request.user.is_active:
++# 		raise Http404
++# 	ratings_df = pd.DataFrame(list(Myrating.objects.all().values()))
++# 	movie_df = pd.DataFrame(list(Movie.objects.all().values()))
++# 	nu=ratings_df.user_id.unique().shape[0]
++# 	print("Number of Unique users : ",nu)
++# 	current_user_id= request.user.id
++# 	# if new user not rated any movie
++# 	if current_user_id==nu:
++# 		movie=Movie.objects.get(movie_id=random.randint(0, 1000))
++# 		q=Myrating(user=request.user,movie=movie,rating=0)
++# 		q.save()
++
++# 	print("Current user id: ",current_user_id)
++# 	user_movie_df = Myrecommend()
++# 	# movie_name = movie_df.loc[[current_user_id],["title"]]
++# 	# movie_name = user_movie_df.loc[movie_name]
++# 	# user_movie_df.corrwith(movie_name).sort_values(ascending=False).head(20)
++# 	# Getting the data from user_movie_df corresponding to current user id 
++# 	random_user_df = user_movie_df[user_movie_df.index == current_user_id]
++# 	# Selecting the number of movies watched  by current user id 
++# 	movies_watched = random_user_df.columns[random_user_df.notna().any()].tolist()
++# 	movies_watched_df = user_movie_df[movies_watched]
++# 	# Computing number of movies watched by every users present
++# 	user_movie_count = movies_watched_df.T.notnull().sum()
++# 	# Creating a Dataframe of userID movie_count
++# 	user_movie_count = user_movie_count.reset_index()
++# 	user_movie_count.columns = ["user_id","movie_count"]
++# 	user_movie_count[user_movie_count["movie_count"] != len(movies_watched)]
++# 	# perc = len(movies_watched) * 0.6
++# 	users_same_movies = user_movie_count[user_movie_count["movie_count"] != user_movie_count["movie_count"].mean()]["user_id"]
++# 	final_df = pd.concat([movies_watched_df[movies_watched_df.index.isin(users_same_movies)],random_user_df[movies_watched]])
++# 	final_df = final_df.head(final_df.shape[0]-1)
++# 	corr_df = final_df.T.corr().unstack().sort_values().drop_duplicates()
++# 	corr_df = pd.DataFrame(corr_df, columns=["corr"])
++# 	corr_df.index.names = ['user_id_1', 'user_id_2']
++# 	corr_df = corr_df.reset_index()
++# 	top_users = corr_df[(corr_df["user_id_1"] == current_user_id) & (corr_df["corr"] != corr_df["corr"].mean())][["user_id_2", "corr"]].reset_index(drop=True)
++# 	top_users = top_users.sort_values(by='corr', ascending=False)
++# 	top_users.rename(columns={"user_id_2": "user_id"}, inplace=True)
++# 	top_users_ratings = top_users.merge(ratings_df[["user_id", "movie_id", "rating"]], how='inner')
++# 	top_users_ratings['weighted_rating'] = top_users_ratings['corr'] * top_users_ratings['rating'] 
++# 	top_users_ratings.groupby('movie_id').agg({"weighted_rating": "mean"})
++# 	recommendation_df = top_users_ratings.groupby('movie_id').agg({"weighted_rating": "mean"})
++# 	recommendation_df = recommendation_df.reset_index()
++# 	recommendation_df[recommendation_df["weighted_rating"] != recommendation_df["weighted_rating"].mean()]
++# 	movies_to_be_recommend = recommendation_df[recommendation_df["weighted_rating"] != recommendation_df["weighted_rating"].mean()].sort_values("weighted_rating", ascending=False)
++# 	return render(request,'web/recommend.html',{'movie_list':movies_to_be_recommend})
++
++
++	
++# for recommendation Version 1
+ def recommend(request):
+ 	if not request.user.is_authenticated:
+ 		return redirect("login")
+ 	if not request.user.is_active:
+ 		raise Http404
+-	df=pd.DataFrame(list(Myrating.objects.all().values()))
+-	nu=df.user_id.unique().shape[0]
+-	print(nu)
++	ratings_df = pd.DataFrame(list(Myrating.objects.all().values()))
++	movie_df = pd.DataFrame(list(Movie.objects.all().values()))
++	nu=ratings_df.user_id.unique().shape[0]
++	print("Number of Unique users : ",nu)
+ 	current_user_id= request.user.id
+ 	# if new user not rated any movie
+-	if current_user_id>nu:
+-		movie=Movie.objects.get(id=20)
++	if current_user_id==nu:
++		movie=Movie.objects.get(id=15)
+ 		q=Myrating(user=request.user,movie=movie,rating=0)
+ 		q.save()
+ 
+@@ -34,7 +177,7 @@ def recommend(request):
+ 	pred_idxs_sorted = np.argsort(my_predictions)
+ 	pred_idxs_sorted[:] = pred_idxs_sorted[::-1]
+ 	pred_idxs_sorted=pred_idxs_sorted+1
+-	# print(pred_idxs_sorted)
++	print(pred_idxs_sorted)
+ 	preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pred_idxs_sorted)])
+ 	movie_list=list(Movie.objects.filter(id__in = pred_idxs_sorted,).order_by(preserved)[:10])
+ 	return render(request,'web/recommend.html',{'movie_list':movie_list})
+@@ -56,7 +199,7 @@ def detail(request,movie_id):
+ 		return redirect("login")
+ 	if not request.user.is_active:
+ 		raise Http404
+-	movies = get_object_or_404(Movie,id=movie_id)
++	movies = get_object_or_404(Movie,movie_id=movie_id)
+ 	#for rating
+ 	if request.method == "POST":
+ 		rate = request.POST['rating']
