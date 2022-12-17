@@ -1,6 +1,7 @@
 # Movie-Recommender-System
-A Web Base user-item Movie Recommendation Engine using Collaborative Filtering By matrix factorizations algorithm and
-The recommendation based on the underlying idea that is if two persons both liked certian common movies,then the movies that one person has liked that the other person has not yet watched can be recommended to him.   
+A Web Based Movie Recommendation Engine using Hybrid Filtering that comrpises of Content Based Filtering and Collaborative Filtering.
+The Content Based Filtering filters the movies based on the parameters such as (genre,director_name,starcast,overview).
+This set of Filtered Movies is the passed through an Collaborative Based Filtering which then filters the movies based on the interest shared by the other users in the sytem.
 ### Screenshot
 
 ###### Home page
@@ -47,6 +48,8 @@ cd ~/Destop/Movie-Recommender-System
 Create a new virtual environment on that directory
 
 ```
+If virtualenv is not installed on the machine.
+virtualenv --python <path_to_python_director>\python.exe venv
 virtualenv .
 ```
 
