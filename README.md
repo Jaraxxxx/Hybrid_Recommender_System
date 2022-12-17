@@ -55,7 +55,7 @@ Goto that Path
 Example
 
 ```
-cd ~/Destop/Movie-Recommender-System
+cd ~/Desktop/Movie-Recommender-System
 ```
 Create a new virtual environment on that directory
 
