@@ -17,7 +17,7 @@
                     <div class="thumbnail">
                         <h4>{{movie.title}}</h4>
                         <a href="{% url 'detail' movie.movie_id %}">
-                            <img src="{{movie.movie_logo.url}}" class="img-responsive">
+                            <img src="../../../media/{{movie.movie_logo}}" class="img-responsive">
                         </a>
                         <h5>Genre: {{movie.genre}}</h5>
                         <h5>IMDB_Ratings : {{movie.imdb_ratings}}</h5>

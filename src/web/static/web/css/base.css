@@ -6,7 +6,7 @@
 	margin-top: 18px;
 }
 .navbar-nav>li>a{
-	font-size: 18px;
+	font-size: 24px;
 }
 .navbar-brand{
 	font-size: 22px;
@@ -18,19 +18,32 @@
 	color:#00bcd4;
 }
 .navbar-inverse .navbar-nav>li>a{
-		color: #00bcd4;	
+		color: #fff;
+}
+.row{
+    color: white
 }
 h2{
-	margin-left: 20px;
+	margin-left: 40px;
 }
-
+input{
+    color:black;
+    text-align: center;
+}
+.btn{
+    background-color: green;
+    color:white;
+}
 #social-fb:hover {
      color: #3B5998;
  }
  #social-tw:hover {
      color: #4099FF;
  }
-
+.form-group{
+    display:flex;
+    justify-content: center;
+}
  #social-em:hover {
      color: #f39c12;
  }
@@ -39,9 +52,11 @@ h2{
  }
 * {
     margin: 0;
+    font-family: 'Times New Roman', Times, serif;
 }
 html, body {
     height: 100%;
+    background-color: darkblue;
 }
 .wrapper {
     min-height: 100%;
@@ -51,12 +66,15 @@ html, body {
 .footer, .push {
     height: 155px; /* .push must be the same height as .footer */
 }
-
-.row.display-flex {
+.panel-footer{
+    color: black;
+    text-align: center;
+}
+/*.row.display-flex {
   display: flex;
   flex-wrap: wrap;
 }
 .thumbnail {
   height: 100%;
-}
+}*/
 
