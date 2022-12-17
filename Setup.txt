@@ -1,0 +1,20 @@
+cd src
+virtualenv --python C:\Users\jaymr\AppData\Local\Programs\Python\Python310\python.exe venv
+
+.\venv\Scripts\activate
+
+pip install django
+
+django-admin --version
+
+django-admin startproject <project_name> # New Project
+
+pip install numpy
+pip install scipy
+pip install pandas
+python manage.py runserver
+
+
+python manage.py collectstatic // To collect all static files of all the app's in staticfiles 
+
+python manage.py startapp example // To create a new app in django

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+    
 	<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>{% block title %}Movies{% endblock title %}</title>
     {% load static %}
-
 	<link rel="stylesheet" type="text/css" href="{% static 'web/css/bootstrap.min.css'%}">
 	<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css' >
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,700' rel='stylesheet' type='text/css'>
@@ -75,7 +75,15 @@
                 </div>
 
     </nav>
-</div>  
+</div> 
+    <br>
+    <br>
+    {% if request.user.is_authenticated %}
+    <center style="color:#fff"><h2>Welcome User {{user.username}}!!</h2></center>
+    {% else %}
+        <center style="color:#fff"><h2>Welcome Guest!!</h2></center>
+    {% endif %} 
+    <br><br>
     {% block body %}
     {% endblock %}
      <nav class="navbar navbar-bottom">                   
